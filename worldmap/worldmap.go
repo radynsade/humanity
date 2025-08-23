@@ -4,6 +4,16 @@ import "math"
 
 type Cell struct {
 	worldMap *WorldMap
+	x        uint8
+	y        uint8
+}
+
+func (c *Cell) X() uint8 {
+	return c.x
+}
+
+func (c *Cell) Y() uint8 {
+	return c.y
 }
 
 func (c *Cell) Left() {
@@ -38,15 +48,20 @@ type WorldMap struct {
 
 func NewWorldMap(width, height uint8) *WorldMap {
 	var (
-		i, j  uint8
+		x, y  uint8
 		cells [math.MaxUint16]*Cell
 	)
 
 	worldMap := &WorldMap{}
 
-	for i = range width {
-		for j = range height {
-			cells[i+j] = &Cell{worldMap}
+	for x = range width {
+		for y = range height {
+			// "x" and "y" are starting here from 0, so we don't need to - 1.
+			cells[y*worldMap.width+x] = &Cell{
+				worldMap: worldMap,
+				x:        x + 1,
+				y:        y + 1,
+			}
 		}
 	}
 
@@ -56,7 +71,6 @@ func NewWorldMap(width, height uint8) *WorldMap {
 	return worldMap
 }
 
-func (wm WorldMap) Cell(x, y uint8) *Cell {
-
-	return wm.cells[x*y]
+func (wm *WorldMap) Cell(x, y uint8) *Cell {
+	return wm.cells[(y-1)*wm.width+x]
 }
