@@ -25,25 +25,48 @@ const (
 	LayerWeather
 )
 
-type Object struct {
-	cell  *Cell
-	layer Layer
-}
+type Landscape uint8
+
+const (
+	LandscapeOcean = Landscape(iota)
+	LandscapeSea
+	LandscapePlain
+	LandscapeHill
+	LandscapeMountain
+)
+
+type Biome uint8
+
+const (
+	GrassBiome = Biome(iota)
+	SavannahBiome
+	DesertBiome
+	TundraBiome
+	IceBiome
+)
 
 type Cell struct {
-	grid    *Grid
-	x       uint8
-	y       uint8
-	objects map[Layer][math.MaxUint8]Object
+	grid      *Grid
+	x         uint8
+	y         uint8
+	landscape Landscape
+	biome     Biome
 }
 
 func newCell(grid *Grid, x, y uint8) Cell {
 	return Cell{
-		grid:    grid,
-		x:       x,
-		y:       y,
-		objects: map[Layer][math.MaxUint8]Object{},
+		grid: grid,
+		x:    x,
+		y:    y,
 	}
+}
+
+func byteDiff(a, b uint8) uint8 {
+	if a > b {
+		return a - b
+	}
+
+	return b - a
 }
 
 func (c *Cell) X() uint8 {
@@ -52,6 +75,22 @@ func (c *Cell) X() uint8 {
 
 func (c *Cell) Y() uint8 {
 	return c.y
+}
+
+func (c *Cell) Landscape() Landscape {
+	return c.landscape
+}
+
+func (c *Cell) SetLandscape(landscape Landscape) {
+	c.landscape = landscape
+}
+
+func (c *Cell) Biome() Biome {
+	return c.biome
+}
+
+func (c *Cell) SetBiome(biome Biome) {
+	c.biome = biome
 }
 
 func (c *Cell) Left() *Cell {
@@ -102,8 +141,17 @@ func (c *Cell) BottomRight() *Cell {
 	return c.grid.Cell(c.x, c.y+1)
 }
 
-func (c *Cell) Distance(cell *Cell) uint16 {
-	return c.x
+func (c *Cell) Distance(cell *Cell) uint8 {
+	dy := byteDiff(c.y, cell.y)
+	dx := byteDiff(c.x, cell.x)
+
+	// Even-r specific adjustment.
+	if (c.y%2 == 0 && cell.y%2 == 1 && c.x < cell.x) ||
+		(c.y%2 == 1 && cell.y%2 == 0 && c.x > cell.x) {
+		return max(dy, dx+dy/2)
+	}
+
+	return max(dx, dy+(dx+1)/2)
 }
 
 type Grid struct {
