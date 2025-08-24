@@ -3,14 +3,47 @@ package world
 
 import "math"
 
-type Cell struct {
-	grid *Grid
-	x    uint8
-	y    uint8
+type Direction uint8
+
+const (
+	DirectionLeft = Direction(iota)
+	DirectionRight
+	DirectionTopLeft
+	DirectionTopRight
+	DirectionBottomLeft
+	DirectionBottomRight
+)
+
+type Layer uint8
+
+const (
+	LayerTerrain = Layer(iota)
+	LayerFlora
+	LayerResource
+	LayerBuilding
+	LayerUnit
+	LayerWeather
+)
+
+type Object struct {
+	cell  *Cell
+	layer Layer
 }
 
-func newCell(grid *Grid, x, y uint8) *Cell {
-	return &Cell{grid, x, y}
+type Cell struct {
+	grid    *Grid
+	x       uint8
+	y       uint8
+	objects map[Layer][math.MaxUint8]Object
+}
+
+func newCell(grid *Grid, x, y uint8) Cell {
+	return Cell{
+		grid:    grid,
+		x:       x,
+		y:       y,
+		objects: map[Layer][math.MaxUint8]Object{},
+	}
 }
 
 func (c *Cell) X() uint8 {
@@ -70,7 +103,7 @@ func (c *Cell) BottomRight() *Cell {
 }
 
 type Grid struct {
-	cells  [math.MaxUint16]*Cell
+	cells  [math.MaxUint16]Cell
 	width  uint8
 	height uint8
 }
@@ -78,7 +111,7 @@ type Grid struct {
 func NewGrid(width, height uint8) *Grid {
 	var (
 		x, y  uint8
-		cells [math.MaxUint16]*Cell
+		cells [math.MaxUint16]Cell
 	)
 
 	grid := &Grid{}
@@ -96,5 +129,5 @@ func NewGrid(width, height uint8) *Grid {
 }
 
 func (g *Grid) Cell(x, y uint8) *Cell {
-	return g.cells[y*g.width+x]
+	return &g.cells[y*g.width+x]
 }
