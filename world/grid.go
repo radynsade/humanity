@@ -102,6 +102,10 @@ func (c *Cell) BottomRight() *Cell {
 	return c.grid.Cell(c.x, c.y+1)
 }
 
+func (c *Cell) Distance(cell *Cell) uint16 {
+	return c.x
+}
+
 type Grid struct {
 	cells  [math.MaxUint16]Cell
 	width  uint8
